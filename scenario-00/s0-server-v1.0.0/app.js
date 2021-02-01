@@ -14,7 +14,7 @@ const debug = {
 app.get("/path-zenlo-01", (req, res) => {
   console.log(`[_INFO] 200 | get ${req.url}`)
   res.status(200).json({
-    message: "Got Austin 01!",
+    message: "Got Zenlo 01!",
     debug: debug
   })
 })
