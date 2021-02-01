@@ -1,0 +1,12 @@
+{
+  "name": "s0-server",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "os": "^0.1.1"
+  }
+}
