@@ -20,3 +20,7 @@ $ az aks get-credentials \
 Merged "patrice-cluster-01-2021-02-01" as current context in /home/patrice_krakow/.kube/config
 ```
 
+```text
+$ az group delete --name patrice-group-2021-02-01 --yes
+az group delete --name MC_patrice-group-2021-02-01_patrice-cluster-01-2021-02-01_westeurope --yes
+```
