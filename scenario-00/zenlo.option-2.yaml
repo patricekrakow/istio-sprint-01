@@ -65,7 +65,7 @@ spec:
         image: patrice1972/s0-client:1.0.0
         env:
         - name: API_HOST
-          value: "api.ing.com"
+          value: "api.company.com"
         - name: API_PORT
           value: "80"
 ---
@@ -86,7 +86,7 @@ metadata:
   name: virtual-service
 spec:
   hosts:
-  - api.ing.com
+  - api.company.com
   http:
   - name: "get-path-zenlo-01"
     match:
