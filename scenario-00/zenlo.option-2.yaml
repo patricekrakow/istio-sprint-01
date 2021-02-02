@@ -1,0 +1,100 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: server-sa
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+      touchpoint: touchpoint
+  template:
+    metadata:
+      labels:
+        app: server            # specific (different per image)
+        touchpoint: touchpoint # generic  (same for all image)
+    spec:
+      serviceAccountName: server-sa
+      containers:
+      - name: server-co
+        image: patrice1972/s0-server:1.0.0
+        ports:
+        - protocol: TCP
+          containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: touchpoint
+spec:
+  selector:
+    touchpoint: touchpoint
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: client-sa
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      serviceAccountName: client-sa
+      containers:
+      - name: client-co
+        image: patrice1972/s0-client:1.0.0
+        env:
+        - name: API_HOST
+          value: "api.ing.com"
+        - name: API_PORT
+          value: "80"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: destination-rule
+spec:
+  host: touchpoint.default.svc.cluster.local
+  subsets:
+  - name: server-ss
+    labels:
+      app: server
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: virtual-service
+spec:
+  hosts:
+  - api.ing.com
+  http:
+  - name: "get-path-zenlo-01"
+    match:
+    - method:
+        exact: GET
+      uri:
+        exact: "/path-zenlo-01"
+    route:
+    - destination:
+        host: touchpoint.default.svc.cluster.local
+        subset: server-ss
