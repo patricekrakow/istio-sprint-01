@@ -2,86 +2,76 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: server-sa
+  name: s0-service-a-sa
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server-deployment
+  name: s0-service-a-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: server
+      app: s0-service-a
   template:
     metadata:
       labels:
-        app: server
+        app: s0-service-a
     spec:
-      serviceAccountName: server-sa
+      serviceAccountName: s0-service-a-sa
       containers:
-      - name: server-co
-        image: patrice1972/s0-server:1.0.0
+      - name: s0-service-a-co
+        image: patrice1972/s0-service-a:1.0.0
         ports:
         - protocol: TCP
-          containerPort: 3000
+          containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: server
+  name: s0-service-a
 spec:
   selector:
-    app: server
+    app: s0-service-a
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 3000
+  - name: http-s0-service-a # This is MANDATORY !!!
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: client-sa
+  name: s0-client-x-sa
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client-deployment
+  name: s0-client-x-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: client
+      app: s0-client-x
   template:
     metadata:
       labels:
-        app: client
+        app: s0-client-x
     spec:
-      serviceAccountName: client-sa
+      serviceAccountName: s0-client-x-sa
       containers:
-      - name: client-co
-        image: patrice1972/s0-client:1.0.0
+      - name: s0-client-x-co
+        image: patrice1972/s0-client-x:1.0.0
         env:
         - name: API_HOST
           value: "api.company.com"
         - name: API_PORT
-          value: "80"
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
-metadata:
-  name: destination-rule
-spec:
-  host: server.default.svc.cluster.local
-  subsets:
-  - name: server-ss
-    labels:
-      app: server
+          value: "8080"
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: virtual-service
+  name: one-virtual-service
 spec:
   hosts:
   - api.company.com
@@ -94,5 +84,4 @@ spec:
         exact: "/path-zenlo-01"
     route:
     - destination:
-        host: server.default.svc.cluster.local
-        subset: server-ss
+        host: s0-service-a.default.svc.cluster.local

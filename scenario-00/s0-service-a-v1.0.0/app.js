@@ -3,7 +3,7 @@ const os = require("os")
 const package = require('./package.json');
 
 const app = express()
-const port = 3000
+const port = 8080
 
 const debug = {
   serviceName: package.name,

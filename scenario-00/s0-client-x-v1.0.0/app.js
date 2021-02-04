@@ -1,7 +1,7 @@
 const http = require('http');
 
 const API_HOST = process.env.API_HOST || "localhost";
-const API_PORT = process.env.API_PORT || 3000;
+const API_PORT = process.env.API_PORT || 8080;
 
 console.log(`[INFO] API_HOST=${API_HOST} & API_PORT=${API_PORT}`);
 
@@ -35,5 +35,6 @@ function poll(urls, nIndex) {
 }
 
 poll([
-  `http://${API_HOST}:${API_PORT}/path-zenlo-01`
+  `http://${API_HOST}:${API_PORT}/path-zenlo-01`,
+  `http://${API_HOST}:${API_PORT}/path-zenlo-02`
 ], 0);

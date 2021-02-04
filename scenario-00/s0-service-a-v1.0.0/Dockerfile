@@ -11,7 +11,7 @@ COPY package.json .
 RUN npm install
 
 # Inform Docker that the container is listening on the specified port at runtime.
-# EXPOSE 3000 - we don't need that for the 'client'
+EXPOSE 8080
 
 # Run the specified command within the container.
 CMD [ "npm", "start" ]
