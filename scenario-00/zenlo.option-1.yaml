@@ -36,7 +36,47 @@ spec:
   ports:
   - name: http-s0-service-a # This is MANDATORY !!!
     protocol: TCP
-    port: 8080
+    port: 80
+    targetPort: 8080
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: s0-service-b-sa
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s0-service-b-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s0-service-b
+  template:
+    metadata:
+      labels:
+        app: s0-service-b
+    spec:
+      serviceAccountName: s0-service-b-sa
+      containers:
+      - name: s0-service-b-co
+        image: patrice1972/s0-service-b:1.0.0
+        ports:
+        - protocol: TCP
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s0-service-b
+spec:
+  selector:
+    app: s0-service-b
+  ports:
+  - name: http-s0-service-b # This is MANDATORY !!!
+    protocol: TCP
+    port: 80
     targetPort: 8080
 ---
 apiVersion: v1
@@ -66,7 +106,7 @@ spec:
         - name: API_HOST
           value: "api.company.com"
         - name: API_PORT
-          value: "8080"
+          value: "80"
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
@@ -76,7 +116,7 @@ spec:
   hosts:
   - api.company.com
   http:
-  - name: "get-path-zenlo-01"
+  - name: "routes-to-s0-service-a"
     match:
     - method:
         exact: GET
@@ -85,3 +125,12 @@ spec:
     route:
     - destination:
         host: s0-service-a.default.svc.cluster.local
+  - name: "routes-to-s0-service-b"
+    match:
+    - method:
+        exact: GET
+      uri:
+        exact: "/path-zenlo-02"
+    route:
+    - destination:
+        host: s0-service-b.default.svc.cluster.local

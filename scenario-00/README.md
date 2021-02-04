@@ -87,6 +87,80 @@ namespace/default labeled
 ```
 
 ```text
+$ cd ~/environment/
+$ cd istio-1.8.2/
+$ kubectl apply -f samples/addons
+...
+```
+
+> If there are errors trying to install the addons, try running the command again. There may be some timing issues which will be resolved when the command is run again.
+
+```text
+$ export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+$ export INGRESS_DOMAIN=${INGRESS_HOST}.nip.io
+$ echo $INGRESS_DOMAIN
+40.114.187.131.nip.io
+```
+
+### Configure Kiali
+
+```text
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: kiali-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http-kiali
+      protocol: HTTP
+    hosts:
+    - "kiali.${INGRESS_DOMAIN}"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: kiali-vs
+  namespace: istio-system
+spec:
+  hosts:
+  - "kiali.${INGRESS_DOMAIN}"
+  gateways:
+  - kiali-gateway
+  http:
+  - route:
+    - destination:
+        host: kiali
+        port:
+          number: 20001
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: kiali
+  namespace: istio-system
+spec:
+  host: kiali
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+EOF
+```
+
+```text
+$ echo kiali.${INGRESS_DOMAIN}
+```
+
+<http://kiali.40.114.187.131.nip.io>
+
+
+```text
 $ az group delete --name pk-group-01 --yes
 az group delete --name MC_pk-group-01_pk-cluster-01_westeurope --yes
 ```

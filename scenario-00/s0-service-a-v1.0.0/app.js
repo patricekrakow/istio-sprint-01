@@ -23,7 +23,7 @@ app.get("/path-zenlo-01", (req, res) => {
 app.use(function (req, res, next) {
   console.log(`[ERROR] 404 | get ${req.url}`)
   res.status(404).json({
-    message: "Not found :-( ",
+    message: "Not found :-(",
     debug: debug
   })
 })

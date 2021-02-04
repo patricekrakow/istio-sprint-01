@@ -14,7 +14,7 @@ const debug = {
 app.get("/path-zenlo-02", (req, res) => {
   console.log(`[_INFO] 200 | get ${req.url}`)
   res.status(200).json({
-    message: "Got Zenlo 01!",
+    message: "Got Zenlo 02!",
     debug: debug
   })
 })
@@ -23,7 +23,7 @@ app.get("/path-zenlo-02", (req, res) => {
 app.use(function (req, res, next) {
   console.log(`[ERROR] 404 | get ${req.url}`)
   res.status(404).json({
-    message: "Not found :-( ",
+    message: "Not found :-(",
     debug: debug
   })
 })
