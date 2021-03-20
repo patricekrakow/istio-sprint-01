@@ -1,0 +1,387 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: service-a-ns
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-a-sa
+  namespace: service-a-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-a-deployment
+  namespace: service-a-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-a
+  template:
+    metadata:
+      labels:
+        app: service-a
+    spec:
+      serviceAccountName: service-a-sa
+      containers:
+        - name: service-a-co
+          image: patrice1972/generic-http-server:0.1.0
+          env:
+            - name: SERVICE_NAME
+              value: service-a
+            - name: SERVICE_VERSION
+              value: 0.1.0
+            - name: SERVICE_PORT
+              value: "8080"
+            - name: API_GET_PATHS
+              value: /path-fermi-01;/path-fermi-02
+          ports:
+            - protocol: TCP
+              containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a
+  namespace: service-a-ns
+spec:
+  selector:
+    app: service-a
+  ports:
+    - name: http-service-a-port
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: service-b-ns
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-b-sa
+  namespace: service-b-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-b-deployment
+  namespace: service-b-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-b
+  template:
+    metadata:
+      labels:
+        app: service-b
+    spec:
+      serviceAccountName: service-b-sa
+      containers:
+        - name: service-b-co
+          image: patrice1972/generic-http-server:0.1.0
+          env:
+            - name: SERVICE_NAME
+              value: service-b
+            - name: SERVICE_VERSION
+              value: 0.1.0
+            - name: SERVICE_PORT
+              value: "8080"
+            - name: API_GET_PATHS
+              value: /path-fermi-03;/path-fabel-01
+          ports:
+            - protocol: TCP
+              containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+  namespace: service-b-ns
+spec:
+  selector:
+    app: service-b
+  ports:
+    - name: http-service-b-port
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: service-c-ns
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-c-sa
+  namespace: service-c-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-c-deployment
+  namespace: service-c-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-c
+  template:
+    metadata:
+      labels:
+        app: service-c
+    spec:
+      serviceAccountName: service-c-sa
+      containers:
+        - name: service-c-co
+          image: patrice1972/generic-http-server:0.1.0
+          env:
+            - name: SERVICE_NAME
+              value: service-c
+            - name: SERVICE_VERSION
+              value: 0.1.0
+            - name: SERVICE_PORT
+              value: "8080"
+            - name: API_GET_PATHS
+              value: /path-fabel-02
+          ports:
+            - protocol: TCP
+              containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-c
+  namespace: service-c-ns
+spec:
+  selector:
+    app: service-c
+  ports:
+    - name: http-service-c-port
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: client-x-ns
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: client-x-sa
+  namespace: client-x-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-x-deployment
+  namespace: client-x-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-x
+  template:
+    metadata:
+      labels:
+        app: client-x
+    spec:
+      serviceAccountName: client-x-sa
+      containers:
+        - name: client-x-co
+          image: patrice1972/generic-http-client:0.1.0
+          env:
+            - name: API_HOSTNAME
+              value: api.company.com
+            - name: API_PORT
+              value: "80"
+            - name: API_GET_PATHS
+              value: /path-fermi-01;/path-fermi-02;/path-fermi-03;/path-fabel-01;/path-fabel-02
+          ports:
+            - protocol: TCP
+              containerPort: 8080
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-peer-authentication
+  namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all-authorization-policy
+  namespace: istio-system
+spec: {}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: api-company-com-service-entry
+  namespace: service-a-ns
+spec:
+  hosts:
+    - api.company.com
+  location: MESH_INTERNAL
+  resolution: STATIC
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-company-com-virtual-service
+  namespace: service-a-ns
+spec:
+  hosts:
+    - api.company.com
+  http:
+    - name: service-a-http-route
+      match:
+        - method:
+            exact: GET
+          headers:
+            host:
+              exact: api.company.com
+          uri:
+            exact: /path-fermi-01
+        - method:
+            exact: GET
+          headers:
+            host:
+              exact: api.company.com
+          uri:
+            exact: /path-fermi-02
+      route:
+        - destination:
+            host: service-a.service-a-ns.svc.cluster.local
+    - name: s6-service-b-http-route
+      match:
+        - method:
+            exact: GET
+          headers:
+            host:
+              exact: api.company.com
+          uri:
+            exact: /path-fermi-03
+        - method:
+            exact: GET
+          headers:
+            host:
+              exact: api.company.com
+          uri:
+            exact: /path-fabel-01
+      route:
+        - destination:
+            host: service-b.service-b-ns.svc.cluster.local
+    - name: s6-service-c-http-route
+      match:
+        - method:
+            exact: GET
+          headers:
+            host:
+              exact: api.company.com
+          uri:
+            exact: /path-fabel-02
+      route:
+        - destination:
+            host: service-c.service-c-ns.svc.cluster.local
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: client-x-to-service-a-authorization-policy
+  namespace: service-a-ns
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              # Spiffe Id:
+              - cluster.local/ns/client-x-ns/sa/client-x-sa
+    - to:
+        - operation:
+            methods:
+              - GET
+            hosts:
+              - api.company.com
+            paths:
+              - /path-fermi-01
+        - operation:
+            methods:
+              - GET
+            hosts:
+              - api.company.com
+            paths:
+              - /path-fermi-02
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: client-x-to-service-b-authorization-policy
+  namespace: service-b-ns
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              # Spiffe Id:
+              - cluster.local/ns/client-x-ns/sa/client-x-sa
+    - to:
+        - operation:
+            methods:
+              - GET
+            hosts:
+              - api.company.com
+            paths:
+              - /path-fermi-03
+        - operation:
+            methods:
+              - GET
+            hosts:
+              - api.company.com
+            paths:
+              - /path-fabel-01
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: client-x-to-service-c-authorization-policy
+  namespace: service-c-ns
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              # Spiffe Id:
+              - cluster.local/ns/client-x-ns/sa/client-x-sa
+    - to:
+        - operation:
+            methods:
+              - GET
+            hosts:
+              - api.company.com
+            paths:
+              - /path-fabel-02
