@@ -50,6 +50,7 @@ s6-client-x -- get api.company.com /path-fabel-02 -----> 200 | s6-service-c
 You can find below a graphical representation of this situation:
 
 ![Diagram 6.1](scenario-06.png)
+
 *Fig. 6.1: Scenario 6*
 
 ## Demo with Kubernetes and Istio (1.9)
